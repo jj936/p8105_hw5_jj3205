@@ -172,6 +172,8 @@ results_df %>%
   ylab("Proportion of Murders that are Unsolved") +
   ggtitle("Estinated Proportion of Murders which are Unsolved by City")
 ```
+Chicago's unsolved homicides proportion estimate is the the highest and it is significantly higher than the rest.
+
 ## Problem 3
 
 
@@ -204,7 +206,8 @@ head(mean_multi)
 
 ```
 
-Plots
+While the true mean increases, the proportion of rejection increases. The power increases as the effect size increases, and ultimately approaches 1. The slope of power decreases as the effect size increases.
+
 
 ```{r}
 mean_multi %>%
@@ -249,3 +252,7 @@ ggplot(full_estimate,aes(x = mean, y = average_estimate)) +
   
   
 ```
+
+Therefore, when the effect size is less than 4, the sample average of $\hat\mu$ when the null is rejected is different from the true value of $\mu$. It is always larger than the true value of $\\mu$, since the effect size is relatively small and the power is relatively low.
+
+When the effect size gets larger or equal to 4, the sample average of $\hat\mu$ when the null is rejected is approximately equal to the true value of $\mu$, since the power is increasing as the effect size increases.
