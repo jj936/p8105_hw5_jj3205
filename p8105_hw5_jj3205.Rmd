@@ -118,7 +118,7 @@ baltimore_test %>%
 ```
 Table of unsolved and total murders for each city
 ```{r, warning=FALSE, message=FALSE}
-homicides_df %>%
+homicide_df %>%
   group_by(city_state) %>%
   summarise(
     unsolved = sum(resolution == "unsolved"),
@@ -148,7 +148,7 @@ prop_test_function(baltimore_df)
 
 Now iterate across all cities
 ```{r}
-results_df <- homicides_df %>%
+results_df <- homicide_df %>%
   nest(data = uid:resolution) %>%
   mutate(
     test_results = map(data, prop_test_function),
@@ -172,4 +172,80 @@ results_df %>%
   ylab("Proportion of Murders that are Unsolved") +
   ggtitle("Estinated Proportion of Murders which are Unsolved by City")
 ```
+## Problem 3
 
+
+```{r, warning=FALSE, message=FALSE}
+samples <- rerun(5000,rnorm(n = 30,mean = 0,sd = 5))
+t_test <- function(mu = 0) {
+  sample <- tibble(rnorm(n = 30, mean = mu, sd = 5))
+  
+  result <- t.test(sample) %>% 
+    broom::tidy() %>% 
+    select(estimate,p.value)
+  
+  result
+}
+t_test()
+```
+
+Test
+
+```{r}
+mean_0 <- expand_grid(mean = 0, iteration = 1:5000) %>% 
+  mutate(result = map(mean,t_test)) %>% 
+  unnest(result)
+head(mean_0)
+
+mean_multi <- expand_grid(mean = 1:6, iteration = 1:5000) %>% 
+  mutate(result = map(mean,t_test)) %>% 
+  unnest(result)
+head(mean_multi)
+
+```
+
+Plots
+
+```{r}
+mean_multi %>%
+  group_by(mean) %>% 
+  summarize(proportion_rejected = sum(p.value < 0.05)/5000) %>% 
+  ggplot(aes(x = mean,y = proportion_rejected)) +
+  scale_x_continuous(limits = c(1,6), breaks = seq(1,6,1)) + 
+  geom_point() + geom_path() +
+  labs(x = "True Mean",y = "Power ( proportion of rejected tests )",title = "Power of t.test with different means")
+
+mean_multi %>%
+  group_by(mean) %>% 
+  summarize(average_estimate = mean(estimate,na.rm = T)) %>% 
+  ggplot(aes(x = mean,y = average_estimate)) +
+  scale_x_continuous(limits = c(1,6), breaks = seq(1,6,1)) + 
+  geom_point() + geom_path() +
+  labs(x = "True Mean",y = "Average Estimate Mean",title = "Estimated Means")
+
+```
+
+
+```{r}
+
+rejected_estimate <- mean_multi %>% 
+  filter(p.value < 0.05) %>% group_by(mean) %>% 
+  summarize(average_estimate = mean(estimate,na.rm = T)) %>% 
+  ungroup()
+full_estimate <- mean_multi %>% 
+  group_by(mean) %>% 
+  summarize(average_estimate = mean(estimate,na.rm = T)) %>% 
+  ungroup()
+  
+ggplot(full_estimate,aes(x = mean, y = average_estimate)) +
+  geom_line(data = full_estimate,aes(colour = "blue")) +
+  geom_line(data = rejected_estimate,aes(colour = "red")) +
+  scale_color_manual(name = " ", values = c("blue" = "blue", "red" = "red"),
+                     labels = c('All Estimates','Rejected Estimates'))+
+  geom_point(data = full_estimate,colour = "blue") +
+  geom_point(data = rejected_estimate,colour = "red") +
+  scale_x_continuous(limits = c(1,6), breaks = seq(1,6,1)) +
+  labs(x = "True Mean",y = "Average Estimate Mean",title = "All vs. Rejected Estimates")
+  
+  
+```
